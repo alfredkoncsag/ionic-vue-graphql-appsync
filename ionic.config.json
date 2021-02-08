@@ -1,0 +1,7 @@
+{
+  "name": "mtva-hirado",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
