@@ -5,17 +5,15 @@
         <ion-buttons slot="start">
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $route.params.id }}</ion-title>
+        <ion-title>{{ $route.params.title }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
-      <ion-list >
-        <ion-item v-for="article in articles"  @click="() => router.push('/')" :key="article.id">
+      <ion-list>
+        <ion-item v-for="article in articles" @click="() => router.push('/')" :key="article.id">
           <ion-card button>
-            <div class="image-wrapper">
-              <ion-img :src="article.image"></ion-img>
-            </div>
+            <ion-img :src="article.image"></ion-img>
             <ion-card-header>
               <ion-card-title>{{article.title}}</ion-card-title>
             </ion-card-header>
@@ -37,26 +35,15 @@ import {
   IonToolbar,
   IonItem,
   IonList,
-  IonImg
+  IonImg,
+  IonCardHeader
 } from "@ionic/vue";
 
-import { useRoute , useRouter} from "vue-router";
-import { ref, watch } from "vue";
-
-import { API } from "aws-amplify";
-
-const getArtcilcles = `query Artciles {
-    getArticles(categoryId:"2268b834-d4f0-43b6-b199-3f0f9601ee9d") {
-      articles{
-        id
-        title
-        image
-        lead
-      }
-    }
-  }`;
-
 import { IonCard, IonCardTitle } from "@ionic/vue";
+
+import { useRoute, useRouter } from "vue-router";
+import { ref, watch } from "vue";
+import { API } from "aws-amplify";
 
 export default {
   name: "Folder",
@@ -72,7 +59,8 @@ export default {
     IonList,
     IonImg,
     IonCard,
-    IonCardTitle
+    IonCardTitle,
+    IonCardHeader
   },
   setup() {
     const route = useRoute();
@@ -83,10 +71,17 @@ export default {
     watch(
       () => route.params,
       async param => {
-        console.log(param);
-        articles.value = [];
         const result = await API.graphql({
-          query: getArtcilcles,
+          query: `query Artciles {
+                    getArticles(categoryId:"${route.params.id}") {
+                      articles{
+                        id
+                        title
+                        image
+                        lead
+                      }
+                    }
+                  }`,
           variables: { categoryId: param.id }
         });
         articles.value = result.data.getArticles.articles;
@@ -100,21 +95,3 @@ export default {
   }
 };
 </script>
-<style>
-.image-wrapper {
-  width: 100%;
-  height: 0;
-  padding-bottom: 56%;
-  /* 👆 image height / width * 100% */
-  position: relative;
-  overflow: hidden;
-  background-color: #3981ff;
-}
-img {
-  width: 100%;
-  height: auto;
-  position: absolute;
-}
-
-
-</style>
