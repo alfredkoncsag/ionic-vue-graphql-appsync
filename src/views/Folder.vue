@@ -8,27 +8,58 @@
         <ion-title>{{ $route.params.id }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    
+
     <ion-content :fullscreen="true">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">{{ $route.params.id }}</ion-title>
-        </ion-toolbar>
-      </ion-header>
-    
-      <div id="container">
-        <strong class="capitalize">{{ $route.params.id }}</strong>
-        <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-      </div>
+      <ion-list >
+        <ion-item v-for="article in articles"  @click="() => router.push('/')" :key="article.id">
+          <ion-card button>
+            <div class="image-wrapper">
+              <ion-img :src="article.image"></ion-img>
+            </div>
+            <ion-card-header>
+              <ion-card-title>{{article.title}}</ion-card-title>
+            </ion-card-header>
+          </ion-card>
+        </ion-item>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
-import { IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
+import {
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonMenuButton,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  IonItem,
+  IonList,
+  IonImg
+} from "@ionic/vue";
+
+import { useRoute , useRouter} from "vue-router";
+import { ref, watch } from "vue";
+
+import { API } from "aws-amplify";
+
+const getArtcilcles = `query Artciles {
+    getArticles(categoryId:"2268b834-d4f0-43b6-b199-3f0f9601ee9d") {
+      articles{
+        id
+        title
+        image
+        lead
+      }
+    }
+  }`;
+
+import { IonCard, IonCardTitle } from "@ionic/vue";
 
 export default {
-  name: 'Folder',
+  name: "Folder",
   components: {
     IonButtons,
     IonContent,
@@ -36,34 +67,54 @@ export default {
     IonMenuButton,
     IonPage,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    IonItem,
+    IonList,
+    IonImg,
+    IonCard,
+    IonCardTitle
+  },
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const articles = ref([]);
+
+    // fetch the user information when params change
+    watch(
+      () => route.params,
+      async param => {
+        console.log(param);
+        articles.value = [];
+        const result = await API.graphql({
+          query: getArtcilcles,
+          variables: { categoryId: param.id }
+        });
+        articles.value = result.data.getArticles.articles;
+      }
+    );
+
+    return {
+      router,
+      articles
+    };
   }
-}
+};
 </script>
-
-<style scoped>
-#container {
-  text-align: center;
+<style>
+.image-wrapper {
+  width: 100%;
+  height: 0;
+  padding-bottom: 56%;
+  /* 👆 image height / width * 100% */
+  position: relative;
+  overflow: hidden;
+  background-color: #3981ff;
+}
+img {
+  width: 100%;
+  height: auto;
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
-}
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
-}
 </style>
